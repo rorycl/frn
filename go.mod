@@ -1,4 +1,4 @@
-module rorycl.com/fn
+module rorycl.com/frn
 
 go 1.17
 
