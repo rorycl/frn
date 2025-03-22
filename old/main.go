@@ -1,3 +1,18 @@
+// frn/filerenamer is a file renaming tool that works to remove
+// unexpected characters from file and directory names, replacing
+// sequences of the characters in ReplaceChars with the character "_".
+// The program also lowercases file and directory names.
+//
+// As a special case the replacement sequence "_-_" is replaced with
+// "_".
+//
+// frn works in three modes:
+//
+//  1. if provided with a single file, it will rename that file
+//  2. if provided with a directory (without a trailing slash), it
+//     will rename that directory
+//  3. provided with a directory with a trailing slash it will rename the
+//     directory and all contents below.
 package main
 
 import (
@@ -11,12 +26,14 @@ import (
 	flags "github.com/jessevdk/go-flags"
 )
 
-var regexReplace = regexp.MustCompile("[-_:,&()+@ ]+")
+var ReplaceChars string = `\[\]-_:,&()+@ \`
+
+var regexReplace = regexp.MustCompile("[" + ReplaceChars + "]+")
 
 // Options are the command line options
 type Options struct {
-	Verbose bool `short:"v" long:"verbose" description:"verbose"`
-	Test    bool `short:"t" long:"testmode" description:"enter test mode"`
+	Verbose bool `short:"v" long:"verbose" description:"verbose: record changes"`
+	DryRun  bool `short:"d" long:"dryrun" description:"dry-run mode: no changes will be made"`
 	Args    struct {
 		DirOrFilePath string `description:"directory path to process"`
 	} `positional-args:"yes" required:"yes"`
@@ -31,11 +48,13 @@ func printRenamer(oldpath, newpath string) error {
 	return nil
 }
 
-var usage = fmt.Sprintf(`DirPath
+var usage = fmt.Sprintf(`Path
 
-Recursively rename all files and directories at and under DirOrFilePath.
-Renaming lowercases all files and directories and replaces the
-characters "%s" with the replacement character "_".`, regexReplace)
+Recursively rename the file, directory or the directory and all files
+under it (by providing a directory ending with a "/") provided by Path.
+
+The characters "%s" will be replaced by "_" and the names lowercased.
+If in doubt run in test mode`, regexReplace)
 
 var dirRegister = map[string]struct{}{}
 
