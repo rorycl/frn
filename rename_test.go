@@ -75,11 +75,11 @@ func TestRename(t *testing.T) {
 			isErr:    false,
 		},
 		{
-			origPath: "abc/", // empty
-			isDir:    true,
-			newPath:  "",
-			renamed:  false,
-			isErr:    false,
+			origPath: "rename__test.go", // won't overwrite
+			isDir:    false,
+			newPath:  "rename_test.go",
+			renamed:  true,
+			isErr:    true,
 		},
 	}
 
@@ -87,13 +87,14 @@ func TestRename(t *testing.T) {
 		t.Run(fmt.Sprintf("test_%d", i), func(t *testing.T) {
 			newPath, renamed, err := pathRename(tt.origPath, tt.isDir)
 			if got, want := newPath, tt.newPath; got != want {
-				t.Errorf("got %s want %s", got, want)
+				t.Errorf("path: got %s want %s", got, want)
 			}
 			if got, want := renamed, tt.renamed; got != want {
-				t.Errorf("got %t want %t", got, want)
+				t.Errorf("renamed: got %t want %t", got, want)
 			}
 			if got, want := err != nil, tt.isErr; got != want {
-				t.Errorf("got %t want %t", got, want)
+				t.Errorf("err: got %t want %t", got, want)
+				fmt.Println(err)
 			}
 		})
 	}
