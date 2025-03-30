@@ -81,6 +81,20 @@ func TestRename(t *testing.T) {
 			renamed:  true,
 			isErr:    true,
 		},
+		{
+			origPath: ".",
+			isDir:    true,
+			newPath:  ".",
+			renamed:  false,
+			isErr:    false,
+		},
+		{
+			origPath: "nvim-linux-x86_64/share/nvim/runtime/lua/vim/func/_memoize.lua",
+			isDir:    false,
+			newPath:  "nvim-linux-x86_64/share/nvim/runtime/lua/vim/func/_memoize.lua",
+			renamed:  false,
+			isErr:    false,
+		},
 	}
 
 	for i, tt := range tests {
