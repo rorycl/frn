@@ -95,13 +95,27 @@ func TestRename(t *testing.T) {
 			renamed:  false,
 			isErr:    false,
 		},
+		{
+			origPath: "/tmp/ABC_xyz.Doc", // capital in ext
+			isDir:    false,
+			newPath:  "/tmp/abc_xyz.doc",
+			renamed:  true,
+			isErr:    false,
+		},
+		{
+			origPath: "/tmp/ abc_xyz.doc ", // spaces
+			isDir:    false,
+			newPath:  "/tmp/abc_xyz.doc",
+			renamed:  true,
+			isErr:    false,
+		},
 	}
 
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("test_%d", i), func(t *testing.T) {
 			newPath, renamed, err := pathRename(tt.origPath, tt.isDir)
 			if got, want := newPath, tt.newPath; got != want {
-				t.Errorf("path: got %s want %s", got, want)
+				t.Errorf("path: got '%s' want '%s'", got, want)
 			}
 			if got, want := renamed, tt.renamed; got != want {
 				t.Errorf("renamed: got %t want %t", got, want)

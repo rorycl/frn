@@ -18,15 +18,28 @@ var regexReplaceUnderscore = regexp.MustCompile("(_){2,}")
 // twice
 var dirRegister = map[string]struct{}{}
 
-var fileRenamer func(oldpath, newpath string) error = os.Rename
+type osRenameFunc func(oldpath, newpath string) error
 
-var noopRenamer func(string, string) error = func(oldPath, newPath string) error {
+var fileRenamer osRenameFunc = os.Rename
+
+// noopRenamer simply prints the old and new paths. Note that this only
+// changes the right hand side of the path.
+var noopRenamer osRenameFunc = func(oldPath, newPath string) error {
 	indent := "  "
 	countSep := func(s string) int {
 		return strings.Count(s, string(os.PathSeparator))
 	}
-	fmt.Printf("%s%s => %s\n", strings.Repeat(indent, countSep(oldPath)), oldPath, newPath)
+	fmt.Printf("%s%s => %s\n", strings.Repeat(indent, countSep(oldPath)), filepath.Base(oldPath), filepath.Base(newPath))
 	return nil
+}
+
+// verbosePathRename both does an os.Rename and prints the change
+var verbosePathRename osRenameFunc = func(oldPath, newPath string) error {
+	err := os.Rename(oldPath, newPath)
+	if err != nil {
+		return err
+	}
+	return noopRenamer(oldPath, newPath)
 }
 
 // pathRename renames the file or directory at path returning the
@@ -45,9 +58,9 @@ func pathRename(path string, isDir bool) (string, bool, error) {
 
 	newName := strings.ReplaceAll(nameSansExt, "&", "and")
 	newName = regexReplace.ReplaceAllString(newName, "_")
-	newName = strings.Trim(newName, "_")
 	newName = strings.ToLower(newName)
 	newName = regexReplaceUnderscore.ReplaceAllString(newName, "_")
+	newName = strings.Trim(newName, "_")
 	if newName == "" && extension != "." {
 		newName = "_"
 	}
@@ -56,7 +69,10 @@ func pathRename(path string, isDir bool) (string, bool, error) {
 		newName = "_" + newName
 	}
 
-	newPath := filepath.Join(fileDir, newName) + extension
+	ext := strings.ToLower(extension)
+	ext = strings.TrimSpace(ext)
+
+	newPath := filepath.Join(fileDir, newName) + ext
 
 	if newPath == path {
 		return newPath, false, nil
