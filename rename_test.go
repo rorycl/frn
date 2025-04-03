@@ -1,11 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
 	"testing"
 )
 
-func TestRename(t *testing.T) {
+func TestRenamePath(t *testing.T) {
 
 	fileRenamer = func(oldpath, newpath string) error {
 		return nil
@@ -126,4 +130,73 @@ func TestRename(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestRenameFunc(t *testing.T) {
+
+	dir := t.TempDir()
+
+	makeTestFile := func() string {
+		o, err := os.Create(filepath.Join(dir, "_AND"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		_ = o.Close()
+		return o.Name()
+	}
+
+	tests := []struct {
+		function renameFunc
+		newFile  string // path
+		output   string // for verbose/dry run output
+		err      bool   //
+	}{
+		{
+			function: printRename,
+			newFile:  filepath.Join(dir, "a"),
+			output:   fmt.Sprintf("%s => %s", "_AND", "a"),
+			err:      false,
+		},
+		{
+			function: wrappedOSRename,
+			newFile:  filepath.Join(dir, "b"),
+			output:   "",
+			err:      false,
+		},
+		{
+			function: verboseRename,
+			newFile:  filepath.Join(dir, "c"),
+			output:   fmt.Sprintf("%s => %s", "_AND", "c"),
+			err:      false,
+		},
+	}
+
+	/*
+		listDir := func() {
+			fs, err := ioutil.ReadDir(dir)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, f := range fs {
+				fmt.Println(f.Name())
+			}
+		}
+	*/
+
+	for i, tt := range tests {
+		t.Run(fmt.Sprintf("test_%d", i), func(t *testing.T) {
+			bb := &bytes.Buffer{}
+			outputWriter = bb
+			oldFile := makeTestFile()
+			err := tt.function(oldFile, tt.newFile)
+			if got, want := (err != nil), tt.err; got != want {
+				t.Fatalf("unexpected error %v", err)
+			}
+			strResult := strings.TrimSpace(string(bb.Bytes()))
+			if got, want := strResult, tt.output; got != want {
+				t.Errorf("got %s want %s", got, want)
+			}
+		})
+	}
+
 }

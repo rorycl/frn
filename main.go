@@ -9,9 +9,16 @@ func main() {
 
 	// parse the command line flags.
 	verbose, dryRun, path := flagParse()
-	if dryRun {
-		verbose = true
-		fileRenamer = noopRenamer // redirect file renaming func
+
+	// switch the fileRenamer func to either a print, os rename or
+	// verbose os rename depending on the flags.
+	switch {
+	case dryRun:
+		fileRenamer = printRename
+	case verbose:
+		fileRenamer = verboseRename
+	default:
+		fileRenamer = wrappedOSRename
 	}
 
 	checkErr := func(err error) {
@@ -40,7 +47,7 @@ func main() {
 			fmt.Printf("%s didn't need renaming\n", path)
 		}
 	case WALK: // recursive
-		err = walker(cleanPath, walkRename)
+		err = walker(cleanPath, renamer(cleanPath))
 		checkErr(err)
 	}
 }

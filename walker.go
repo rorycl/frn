@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -32,7 +33,7 @@ func printer(output io.Writer) fs.WalkDirFunc {
 	}
 }
 
-// toucher is a closure returning an fs.WalDirFunc which recreates a
+// toucher is a closure returning an fs.WalkDirFunc which recreates a
 // file tree from path at target.
 func toucher(target string) fs.WalkDirFunc {
 	target = target
@@ -52,4 +53,44 @@ func toucher(target string) fs.WalkDirFunc {
 func walker(path string, fn fs.WalkDirFunc) error {
 	dirFS := os.DirFS(path)
 	return fs.WalkDir(dirFS, ".", fn)
+}
+
+// walkRename walks the directory rooted at path, first applying
+// pathRename for all files then for each directory sorted by longest
+// path first.
+func walkRename(path string) error {
+	dirMap := map[string]int{}
+	dirFS := os.DirFS(root)
+
+	err := fs.WalkDir(dirFS, ".", func(path string, d fs.DirEntry, err error) error {
+		p := filepath.Join(root, path)
+		if p == root {
+			return nil
+		}
+		if d.IsDir() {
+			dirMap[p] = strings.Count(p, string(os.PathSeparator))
+			return nil
+		}
+		_, _, err := pathRename(p, false)
+		return err
+	})
+	if err != nil {
+		return fmt.Errorf("file rename error: %v", err)
+	}
+
+	// sort directories by longest paths first
+	dirs := make([]string, 0, len(dirMap))
+	for d := range dirMap {
+		dirs = append(dirs, d)
+	}
+	sort.Slice(dirs, func(i, j int) bool {
+		return dirMap[dirs[i]] > dirMap[dirs[j]]
+	})
+	for _, p := range dirs {
+		_, _, err := pathRename(p, false)
+		if err != nil {
+			return fmt.Errorf("directory rename error: %v", err)
+		}
+	}
+	return nil
 }

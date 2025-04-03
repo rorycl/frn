@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"io/fs"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -14,32 +14,44 @@ var ReplaceChars string = `[^A-Za-z0-9_.]`
 var regexReplace = regexp.MustCompile(ReplaceChars)
 var regexReplaceUnderscore = regexp.MustCompile("(_){2,}")
 
-// dirRegister is a map of directory names as directories can be seen
-// twice
-var dirRegister = map[string]struct{}{}
+type renameFunc func(oldpath, newpath string) error
 
-type osRenameFunc func(oldpath, newpath string) error
+// fileRenamer is the func used to "rename" a file, but just potentially
+// printing it or both renaming a file and printing it, etc.
+//
+// Any renameFunc provided here _must_ ensure that it gracefully deals
+// with paths with an oldName the same as a newName without erroring.
+var fileRenamer renameFunc
 
-var fileRenamer osRenameFunc = os.Rename
+// wrappedOSRename is an os.Rename which returns nil if the old and new
+// path are the same.
+var wrappedOSRename renameFunc = func(oldPath, newPath string) error {
+	if oldPath == newPath {
+		return nil
+	}
+	return os.Rename(oldPath, newPath)
+}
 
-// noopRenamer simply prints the old and new paths. Note that this only
-// changes the right hand side of the path.
-var noopRenamer osRenameFunc = func(oldPath, newPath string) error {
+// default output is to os.Stdout
+var outputWriter io.Writer = os.Stdout
+
+// printRename only prints the old and new paths.
+var printRename renameFunc = func(oldPath, newPath string) error {
 	indent := "  "
 	countSep := func(s string) int {
 		return strings.Count(s, string(os.PathSeparator))
 	}
-	fmt.Printf("%s%s => %s\n", strings.Repeat(indent, countSep(oldPath)), filepath.Base(oldPath), filepath.Base(newPath))
+	fmt.Fprintf(outputWriter, "%s%s => %s\n", strings.Repeat(indent, countSep(oldPath)), filepath.Base(oldPath), filepath.Base(newPath))
 	return nil
 }
 
-// verbosePathRename both does an os.Rename and prints the change
-var verbosePathRename osRenameFunc = func(oldPath, newPath string) error {
-	err := os.Rename(oldPath, newPath)
+// verboseRename does both a wrapped os.Rename and prints the change
+var verboseRename renameFunc = func(oldPath, newPath string) error {
+	err := wrappedOSRename(oldPath, newPath)
 	if err != nil {
 		return err
 	}
-	return noopRenamer(oldPath, newPath)
+	return printRename(oldPath, newPath)
 }
 
 // pathRename renames the file or directory at path returning the
@@ -74,28 +86,19 @@ func pathRename(path string, isDir bool) (string, bool, error) {
 
 	newPath := filepath.Join(fileDir, newName) + ext
 
-	if newPath == path {
-		return newPath, false, nil
-	}
-
-	// directories can be seen twice
-	if isDir {
-		if _, ok := dirRegister[newPath]; ok {
-			return newPath, false, nil
-		}
-		dirRegister[newPath] = struct{}{}
-	}
+	renamed := (newPath != path)
 
 	// don't overwrite.
-	_, err := os.Stat(newPath)
-	if err == nil {
-		return newPath, true, fmt.Errorf("file %s already exists", newPath)
+	if renamed {
+		_, err := os.Stat(newPath)
+		switch {
+		case err == nil && isDir:
+			return "", false, nil
+		case err == nil:
+			return newPath, true, fmt.Errorf("file %s already exists", newPath)
+		}
 	}
-	return newPath, true, fileRenamer(path, newPath)
-}
-
-// walkRename adapts a pathrename to a fs.WalkDirFunc
-func walkRename(path string, d fs.DirEntry, _ error) error {
-	_, _, err := pathRename(path, d.IsDir())
-	return err
+	// fileRenamer _must_ handle not trying to rename a file or dir of
+	// the same name
+	return newPath, renamed, fileRenamer(path, newPath)
 }
