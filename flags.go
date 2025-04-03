@@ -39,9 +39,14 @@ func flagParse() (verbose, dryRun bool, path string) {
 		return
 	}
 	if opts.Args.DirOrFilePath == "" {
-		fmt.Println("no filepath found")
+		fmt.Println("no filepath found.")
 		exit(1)
 		return
+	}
+	if opts.DryRun && opts.Verbose {
+		fmt.Println("dryrun and verbose selected -- please select one or ther other.")
+		exit(1)
+
 	}
 	return opts.Verbose, opts.DryRun, opts.Args.DirOrFilePath
 }

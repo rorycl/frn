@@ -46,6 +46,13 @@ func TestFlagParse(t *testing.T) {
 			path:     "",
 			exitCode: 1, // second path unexpected
 		},
+		{
+			args:     []string{"prog", "-d", "-v", "a/path"},
+			verbose:  true,
+			dryRun:   true,
+			path:     "a/path",
+			exitCode: 1, // dry run and verbose
+		},
 	}
 
 	var exitCode int
