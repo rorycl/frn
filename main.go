@@ -47,7 +47,7 @@ func main() {
 			fmt.Printf("%s didn't need renaming\n", path)
 		}
 	case WALK: // recursive
-		err = walker(cleanPath, renamer(cleanPath))
+		err = walkRename(cleanPath, walkPathRenameFunc)
 		checkErr(err)
 	}
 }

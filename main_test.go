@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -16,10 +17,19 @@ func TestMain(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	err = walker(tempDir, printer(os.Stdout))
-	if err != nil {
-		t.Fatal(err)
-	}
+	// expected
+	want := `
+          %^&*()(___and => and_and
+          _AND => _and
+            a nn $!@# => a_nn
+          12$-3.txt => 12_3.txt
+          12--n3.txt => 12_n3.txt
+          AnotherFile.Doc => anotherfile.doc
+            c d eFG => c_d_efg
+          b => b
+        A => a
+        b 1&2 => b_1and2
+`
 
 	// redirect output (normally os.Stdout)
 	bb := &bytes.Buffer{}
@@ -27,6 +37,9 @@ func TestMain(t *testing.T) {
 	os.Args = []string{"prog", "-v", tempDir + "/"}
 
 	main()
-	fmt.Println(string(bb.Bytes()))
+
+	if got, want := string(bb.Bytes()), strings.TrimSpace(want); got != want {
+		fmt.Errorf("got %s want %s", got, want)
+	}
 
 }

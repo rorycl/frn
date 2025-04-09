@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -101,4 +102,10 @@ func pathRename(path string, isDir bool) (string, bool, error) {
 	// fileRenamer _must_ handle not trying to rename a file or dir of
 	// the same name
 	return newPath, renamed, fileRenamer(path, newPath)
+}
+
+// walkPathRenameFunc adapts pathRename to a WalkDirFunc
+func walkPathRenameFunc(path string, d fs.DirEntry, _ error) error {
+	_, _, err := pathRename(path, d.IsDir())
+	return err
 }
