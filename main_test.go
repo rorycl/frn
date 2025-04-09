@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -27,8 +26,8 @@ func TestMain(t *testing.T) {
           AnotherFile.Doc => anotherfile.doc
             c d eFG => c_d_efg
           b => b
-        A => a
         b 1&2 => b_1and2
+        A => a
 `
 
 	// redirect output (normally os.Stdout)
@@ -38,8 +37,8 @@ func TestMain(t *testing.T) {
 
 	main()
 
-	if got, want := string(bb.Bytes()), strings.TrimSpace(want); got != want {
-		fmt.Errorf("got %s want %s", got, want)
+	if got, want := strings.TrimSpace(bb.String()), strings.TrimSpace(want); got != want {
+		t.Errorf("got %s want %s", got, want)
 	}
 
 }

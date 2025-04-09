@@ -192,7 +192,7 @@ func TestRenameFunc(t *testing.T) {
 			if got, want := (err != nil), tt.err; got != want {
 				t.Fatalf("unexpected error %v", err)
 			}
-			strResult := strings.TrimSpace(string(bb.Bytes()))
+			strResult := strings.TrimSpace(bb.String())
 			if got, want := strResult, tt.output; got != want {
 				t.Errorf("got %s want %s", got, want)
 			}

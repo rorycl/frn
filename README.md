@@ -1,8 +1,8 @@
 # frn
 
-**filerenamer** rename files and directories, optionally recursively.
+**filerenamer**: rename files and directories, optionally recursively.
 
-version 0.0.1 : 09 April 2025
+version 0.0.2 : 09 April 2025
 
 Golang program for renaming files and directories, optionally recursively.
 
@@ -40,7 +40,7 @@ Arguments:
 
 ```
 # example directory
-tree Abc
+> tree Abc
    Abc
    ├── AB d
    │   ├──  hi there.TXT
@@ -49,15 +49,15 @@ tree Abc
    │   └── eXample .JPG 
    └── fore.DOC
 
-# rename only the directory
-./frn -v Abc
+# rename only the directory, verbose mode
+> ./frn -v Abc
    Abc => abc
 
 # rename recursively
-./frn abc
+> ./frn abc/
 
 # result
-tree abc
+> tree abc
    abc
    ├── ab_d
    │   ├── hi_there.txt
@@ -71,4 +71,4 @@ tree abc
 
 ## License
 
-This project is licensed under the [MIT Licence](LICENCE).
+Licensed under the [MIT Licence](LICENCE).
