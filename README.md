@@ -1,5 +1,6 @@
 # frn
-(Optionally) recursive file and directory renamer
+
+**filerenamer** rename files and directories, optionally recursively.
 
 version 0.0.1 : 09 April 2025
 
@@ -32,6 +33,38 @@ Help Options:
 
 Arguments:
   DirOrFilePath:       directory path to process
+
+```
+
+## Example
+
+```
+# example directory
+tree Abc
+   Abc
+   ├── AB d
+   │   ├──  hi there.TXT
+   │   └── There
+   ├── c**D e
+   │   └── eXample .JPG 
+   └── fore.DOC
+
+# rename only the directory
+./frn -v Abc
+   Abc => abc
+
+# rename recursively
+./frn abc
+
+# result
+tree abc
+   abc
+   ├── ab_d
+   │   ├── hi_there.txt
+   │   └── there
+   ├── c_d_e
+   │   └── example.jpg
+   └── fore.doc
 
 ```
 
