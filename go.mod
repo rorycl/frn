@@ -1,4 +1,4 @@
-module rorycl.com/frn
+module github.com/rorycl/frn
 
 go 1.24
 
