@@ -18,11 +18,12 @@ lowercased. If in doubt run in dryrun mode.`
 
 var exit func(int) = os.Exit
 
-func flagParse() (verbose, dryRun bool, path string) {
+func flagParse() (verbose, dryRun, dotFile bool, path string) {
 
 	type options struct {
 		Verbose bool `short:"v" long:"verbose" description:"verbose: record changes"`
 		DryRun  bool `short:"d" long:"dryrun" description:"dry-run mode: no changes will be made"`
+		DotFile bool `short:"i" long:"includeDotFiles" description:"also rename dot files"`
 		Args    struct {
 			DirOrFilePath string `description:"directory path to process"`
 		} `positional-args:"yes" required:"yes"`
@@ -48,5 +49,5 @@ func flagParse() (verbose, dryRun bool, path string) {
 		exit(1)
 
 	}
-	return opts.Verbose, opts.DryRun, opts.Args.DirOrFilePath
+	return opts.Verbose, opts.DryRun, opts.DotFile, opts.Args.DirOrFilePath
 }
