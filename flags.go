@@ -14,7 +14,11 @@ Recursively rename the file, directory or the directory and all files
 under it (by providing a directory ending with a "/") provided by Path.
 
 All non-word, . and _ characters will be replaced by "_" and the names
-lowercased. If in doubt run in dryrun mode.`
+lowercased.
+
+Dotfiles are skipped unless the -i/--includeDotFiles option is included.
+
+If in doubt run in dryrun mode.`
 
 var exit func(int) = os.Exit
 
