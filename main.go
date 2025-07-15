@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
+	"io/fs"
 	"os"
 )
 
 func main() {
 
 	// parse the command line flags.
-	verbose, dryRun, path := flagParse()
+	verbose, dryRun, incDotFiles, path := flagParse()
 
 	// switch the fileRenamer func to either a print, os rename or
 	// verbose os rename depending on the flags.
@@ -35,18 +36,23 @@ func main() {
 
 	switch processType {
 	case FILE:
-		_, renamed, err := pathRename(cleanPath, false)
+		_, renamed, err := pathRename(cleanPath, false, incDotFiles)
 		checkErr(err)
 		if verbose && !renamed {
 			fmt.Printf("%s didn't need renaming\n", path)
 		}
 	case DIR:
-		_, renamed, err := pathRename(cleanPath, true)
+		_, renamed, err := pathRename(cleanPath, true, incDotFiles)
 		checkErr(err)
 		if verbose && !renamed {
 			fmt.Printf("%s didn't need renaming\n", path)
 		}
 	case WALK: // recursive
+		// walkPathRenameFunc adapts pathRename to a WalkDirFunc
+		walkPathRenameFunc := func(path string, d fs.DirEntry, _ error) error {
+			_, _, err := pathRename(path, d.IsDir(), incDotFiles)
+			return err
+		}
 		err = walkRename(cleanPath, walkPathRenameFunc)
 		checkErr(err)
 	}
