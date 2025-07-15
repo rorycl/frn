@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -59,22 +58,36 @@ var verboseRename renameFunc = func(oldPath, newPath string) error {
 // renamed filename, whether a rename occurred or error. The rename
 // doesn't deal with odd characters in the extension.
 //
+// If incDotFiles is true dot files (files starting with a .) are also
+// renamed. This is not the default.
+//
 // pathRename refuses to overwrite an existing file.
-func pathRename(path string, isDir bool) (string, bool, error) {
+func pathRename(path string, isDir bool, incDotFiles bool) (string, bool, error) {
 	fileDir, fileName := filepath.Split(path)
 	if fileName == "" {
 		return "", false, nil
 	}
+	fmt.Println(fileDir, fileName)
+	if !incDotFiles && fileName[0] == '.' {
+		return path, false, nil
+	}
 	extension := filepath.Ext(fileName)
 	nameSansExt := strings.TrimSuffix(fileName, extension)
-	underFirstChar := strings.HasPrefix(nameSansExt, "_")
 
+	// deal with dot files
+	if len(extension) > 0 && len(nameSansExt) == 0 {
+		extension = ""
+		nameSansExt = fileName
+	}
+
+	underFirstChar := strings.HasPrefix(nameSansExt, "_")
 	newName := strings.ReplaceAll(nameSansExt, "&", "and")
 	newName = regexReplace.ReplaceAllString(newName, "_")
+	// newName = periodReplace(newName)
 	newName = strings.ToLower(newName)
 	newName = regexReplaceUnderscore.ReplaceAllString(newName, "_")
 	newName = strings.Trim(newName, "_")
-	if newName == "" && extension != "." {
+	if newName == "" && extension != "." && !isDir {
 		newName = "_"
 	}
 	// put back leading underbar if it already existed
@@ -102,10 +115,4 @@ func pathRename(path string, isDir bool) (string, bool, error) {
 	// fileRenamer _must_ handle not trying to rename a file or dir of
 	// the same name
 	return newPath, renamed, fileRenamer(path, newPath)
-}
-
-// walkPathRenameFunc adapts pathRename to a WalkDirFunc
-func walkPathRenameFunc(path string, d fs.DirEntry, _ error) error {
-	_, _, err := pathRename(path, d.IsDir())
-	return err
 }

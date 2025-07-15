@@ -16,108 +16,146 @@ func TestRenamePath(t *testing.T) {
 	}
 
 	tests := []struct {
-		origPath string
-		isDir    bool
-		newPath  string
-		renamed  bool
-		isErr    bool
+		origPath    string
+		isDir       bool
+		incDotFiles bool
+		newPath     string
+		renamed     bool
+		isErr       bool
 	}{
 		{
-			origPath: "*(x[]Abc.doc",
-			isDir:    false,
-			newPath:  "x_abc.doc",
-			renamed:  true,
-			isErr:    false,
+			origPath:    "*(x[]Abc.doc",
+			isDir:       false,
+			incDotFiles: false,
+			newPath:     "x_abc.doc",
+			renamed:     true,
+			isErr:       false,
 		},
 		{
-			origPath: "ABCdef  g.doc",
-			isDir:    false,
-			newPath:  "abcdef_g.doc",
-			renamed:  true,
-			isErr:    false,
+			origPath:    "ABCdef  g.doc",
+			isDir:       false,
+			incDotFiles: false,
+			newPath:     "abcdef_g.doc",
+			renamed:     true,
+			isErr:       false,
 		},
 		{
-			origPath: "$  #.doc",
-			isDir:    false,
-			newPath:  "_.doc",
-			renamed:  true,
-			isErr:    false,
+			origPath:    "$  #.doc",
+			isDir:       false,
+			incDotFiles: false,
+			newPath:     "_.doc",
+			renamed:     true,
+			isErr:       false,
 		},
 		{
-			origPath: "x& Y.doc",
-			isDir:    false,
-			newPath:  "xand_y.doc",
-			renamed:  true,
-			isErr:    false,
+			origPath:    "x& Y.doc",
+			isDir:       false,
+			incDotFiles: false,
+			newPath:     "xand_y.doc",
+			renamed:     true,
+			isErr:       false,
 		},
 		{
-			origPath: "abc",
-			isDir:    true,
-			newPath:  "abc",
-			renamed:  false,
-			isErr:    false,
+			origPath:    "abc",
+			isDir:       true,
+			incDotFiles: false,
+			newPath:     "abc",
+			renamed:     false,
+			isErr:       false,
 		},
 		{
-			origPath: "abc", // check dirRegister
-			isDir:    true,
-			newPath:  "abc",
-			renamed:  false,
-			isErr:    false,
+			origPath:    "abc", // check dirRegister
+			isDir:       true,
+			incDotFiles: false,
+			newPath:     "abc",
+			renamed:     false,
+			isErr:       false,
 		},
 		{
-			origPath: "abc/deF",
-			isDir:    true,
-			newPath:  "abc/def",
-			renamed:  true,
-			isErr:    false,
+			origPath:    "abc/deF",
+			isDir:       true,
+			incDotFiles: false,
+			newPath:     "abc/def",
+			renamed:     true,
+			isErr:       false,
 		},
 		{
-			origPath: "abc/", // empty
-			isDir:    true,
-			newPath:  "",
-			renamed:  false,
-			isErr:    false,
+			origPath:    "abc/", // empty
+			isDir:       true,
+			incDotFiles: false,
+			newPath:     "",
+			renamed:     false,
+			isErr:       false,
 		},
 		{
-			origPath: "rename__test.go", // won't overwrite
-			isDir:    false,
-			newPath:  "rename_test.go",
-			renamed:  true,
-			isErr:    true,
+			origPath:    "rename__test.go", // won't overwrite
+			isDir:       false,
+			incDotFiles: false,
+			newPath:     "rename_test.go",
+			renamed:     true,
+			isErr:       true,
 		},
 		{
-			origPath: ".",
-			isDir:    true,
-			newPath:  ".",
-			renamed:  false,
-			isErr:    false,
+			origPath:    ".",
+			isDir:       true,
+			incDotFiles: false,
+			newPath:     ".",
+			renamed:     false,
+			isErr:       false,
 		},
 		{
-			origPath: "nvim-linux-x86_64/share/nvim/runtime/lua/vim/func/_memoize.lua",
-			isDir:    false,
-			newPath:  "nvim-linux-x86_64/share/nvim/runtime/lua/vim/func/_memoize.lua",
-			renamed:  false,
-			isErr:    false,
+			origPath:    "nvim-linux-x86_64/share/nvim/runtime/lua/vim/func/_memoize.lua",
+			isDir:       false,
+			incDotFiles: false,
+			newPath:     "nvim-linux-x86_64/share/nvim/runtime/lua/vim/func/_memoize.lua",
+			renamed:     false,
+			isErr:       false,
 		},
 		{
-			origPath: "/tmp/ABC_xyz.Doc", // capital in ext
-			isDir:    false,
-			newPath:  "/tmp/abc_xyz.doc",
-			renamed:  true,
-			isErr:    false,
+			origPath:    "/tmp/ABC_xyz.Doc", // capital in ext
+			isDir:       false,
+			incDotFiles: false,
+			newPath:     "/tmp/abc_xyz.doc",
+			renamed:     true,
+			isErr:       false,
 		},
 		{
-			origPath: "/tmp/ abc_xyz.doc ", // spaces
-			isDir:    false,
-			newPath:  "/tmp/abc_xyz.doc",
-			renamed:  true,
-			isErr:    false,
+			origPath:    "/tmp/ abc_xyz.doc ", // spaces
+			isDir:       false,
+			incDotFiles: false,
+			newPath:     "/tmp/abc_xyz.doc",
+			renamed:     true,
+			isErr:       false,
+		},
+		{
+			origPath:    "/tmp/.abc .d", // dotfile
+			isDir:       false,
+			incDotFiles: false,
+			newPath:     "/tmp/.abc .d",
+			renamed:     false,
+			isErr:       false,
+		},
+		{
+			origPath:    "/tmp/.abc .d", // dotfile
+			isDir:       false,
+			incDotFiles: true,
+			newPath:     "/tmp/.abc.d",
+			renamed:     true,
+			isErr:       false,
+		},
+		{
+			origPath:    "/tmp/xax/n/a/b/. ab", // dotfile
+			isDir:       false,
+			incDotFiles: true,
+			newPath:     "/tmp/xax/n/a/b/._ab",
+			renamed:     true,
+			isErr:       false,
 		},
 	}
 
 	for i, tt := range tests {
 		t.Run(fmt.Sprintf("test_%d", i), func(t *testing.T) {
-			newPath, renamed, err := pathRename(tt.origPath, tt.isDir)
+			newPath, renamed, err := pathRename(tt.origPath, tt.isDir, tt.incDotFiles)
 			if got, want := newPath, tt.newPath; got != want {
 				t.Errorf("path: got '%s' want '%s'", got, want)
 			}
