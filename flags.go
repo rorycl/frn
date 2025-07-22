@@ -13,8 +13,8 @@ var usage string = `Path
 Recursively rename the file, directory or the directory and all files
 under it (by providing a directory ending with a "/") provided by Path.
 
-All non-word, . and _ characters will be replaced by "_" and the names
-lowercased.
+All non-word characters in the name of file (excluding the extension)
+will be replaced by "_" and the names lowercased. 
 
 Dotfiles are skipped unless the -i/--includeDotFiles option is included.
 
